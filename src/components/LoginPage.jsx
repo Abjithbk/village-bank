@@ -16,7 +16,7 @@ const LoginPage = () => {
           console.log(response);
 
           const decoded = jwtDecode(response.access);
-          console.log(decoded.profile_type);
+          console.log(decoded);
           const role = decoded.profile_type
           
           if(role === "admin") {

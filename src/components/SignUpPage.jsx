@@ -23,8 +23,8 @@ const SignUpPage = () => {
           return;
         }
         try {
-      const response =    await signup(fname,lname,age,email,pno,password,confPassword,profileType,empId,profilePic)
-         console.log(response);
+     await signup(fname,lname,age,email,pno,password,confPassword,profileType,empId,profilePic)
+        //  console.log(response);
          navigate("/LoginPage")
          
         }

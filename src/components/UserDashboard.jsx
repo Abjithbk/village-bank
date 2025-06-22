@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+
 const UserDashboard = () => {
 
   const [openMenu, setOpenMenu] = useState(false);
@@ -15,11 +16,12 @@ const UserDashboard = () => {
   const [receiverAccountNumber, setReceiverAccountNumber] = useState('');
   const [description, setDescription] = useState('');
   const [error,setError] = useState('')
+  const [userProfile,setUserProfile] = useState(null)
   const navigate = useNavigate();
   const { authToken } = useAuth()
 
   useEffect(()=> {
-     const accountDetails =async ()=> {
+     const accountDetailsAndProfile =async ()=> {
       try {
        const response = await axios.get("https://village-banking-app.onrender.com/api/profile/",{
          headers : {
@@ -32,20 +34,26 @@ const UserDashboard = () => {
       }
       catch(error) {
        console.error(error);
-       
-       
       }
+     try {
+        const profileDetails = await axios.get("https://village-banking-app.onrender.com/api/profile/", {
+        headers : {
+          Authorization : `Bearer ${authToken?.access}`
+        }
+      })
+      console.log(profileDetails.data);
+      setUserProfile(profileDetails.data);
      }
-     accountDetails();
+     catch(error) {
+      console.log(error);
+     }
+     }
+     accountDetailsAndProfile();
   },[authToken])
   
   const handleTransaction =async (e) => {
    e.preventDefault();
-
-
     try {
-     
-   
        await axios.post("https://village-banking-app.onrender.com/api/profile/transaction/", 
        { account_number : accountNumber,
       transaction_type: type,
@@ -99,7 +107,7 @@ const UserDashboard = () => {
             setOpenMenu(!openMenu);
            }}
           >
-            Profile
+            Settings
           </li>
         </ul>
 
@@ -109,9 +117,10 @@ const UserDashboard = () => {
               <li onClick={() => {
                 navigate("/ChangePassword")
               }} className="hover:bg-gray-100 p-2 rounded">Change Password</li>
-              <li className="hover:bg-gray-100 p-2 rounded">View A/c Number</li>
-              <li className="hover:bg-gray-100 p-2 rounded">Profile</li>
-              <li className="hover:bg-gray-100 p-2 rounded">Log Out</li>
+              <li onClick={() => {
+                setActiveSection("profile");
+                setOpenMenu(false);
+              }} className="hover:bg-gray-100 p-2 rounded">Profile</li>
             </ul>
           </div>
         )}
@@ -197,12 +206,64 @@ const UserDashboard = () => {
             </form>
             )
           }
-        {/* Reports */}
+    
         {activeSection === "reports" && (
           <div className="text-gray-600 text-center p-4 border rounded">
             <p>Reports feature coming soon...</p>
           </div>
         )}
+          {
+            activeSection === "profile" && userProfile && (
+              <div className="bg-white shadow p-6 rounded-lg max-w-3xl mx-auto w-full">
+             <h2 className="text-2xl font-bold mb-6 text-center">User Profile</h2>
+
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            
+              <img
+                src={userProfile.profile_pic}
+                alt="Profile"
+                className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
+              />
+
+              
+              <div className="flex-1 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-gray-600 text-sm">First Name</p>
+                    <p className="text-lg font-medium">{userProfile.first_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Last Name</p>
+                    <p className="text-lg font-medium">{userProfile.last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Age</p>
+                    <p className="text-lg font-medium">{userProfile.age}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Phone Number</p>
+                    <p className="text-lg font-medium">{userProfile.phonenumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Account Number</p>
+                    <p className="text-lg font-medium">{userProfile.account?.account_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Account Balance</p>
+                    <p className="text-lg font-medium">₹ {userProfile.account?.balance} </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-gray-600 text-sm">Created At</p>
+                    <p className="text-lg font-medium">
+                      {userProfile.account?.created_at}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+            )
+          }
       </main>
     </div>
   );
