@@ -3,7 +3,18 @@ import { Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import {
+  Chart as ChartJS,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Legend,
+  Tooltip,
+} from 'chart.js';
 
+
+ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Legend, Tooltip);
 
 const UserDashboard = () => {
 
@@ -62,6 +73,50 @@ const UserDashboard = () => {
      }
      accountDetailsAndProfile();
   },[authToken])
+
+                    const chartData = {
+                labels: transactions.map(txn =>
+                  new Date(txn.timestamp).toLocaleDateString()
+                ),
+                datasets: [
+                  {
+                    label: 'Transaction Amount (₹)',
+                    data: transactions.map(txn => parseFloat(txn.amount)),
+                    fill: false,
+                    borderColor: '#3b82f6',
+                    tension: 0.3,
+                  }
+                ]
+              };
+
+              const chartOptions = {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'top' },
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return `₹ ${context.raw}`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: 'Amount (₹)',
+                    }
+                  },
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Date',
+                    }
+                  }
+                }
+              };
   
   const handleTransaction =async (e) => {
    e.preventDefault();
@@ -182,14 +237,14 @@ const UserDashboard = () => {
      
         {activeSection === "dashboard" && (
           <div className="bg-gray-100 p-4 rounded-md">
-            {/* <Line /> */}
+            <Line data={chartData} options={chartOptions} />
           </div>
         )}
 
       
         {activeSection === "transactions" && (
   <>
-    <h3 className="text-xl font-bold mb-4">Sent Transactions</h3>
+   
     <div className="overflow-x-auto mb-6">
       <table className="min-w-full text-sm border rounded">
         <thead className="bg-gray-200">

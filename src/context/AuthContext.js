@@ -40,19 +40,29 @@ const signup =async (fname,lname,age,email,pno,password,confPassword,profileType
     
       }
       return response.data
-  }
+  }  
+     const sendOtp =async (email) => {
+       const response = await axios.post("https://village-banking-app.onrender.com/api/profile/login/sentotp/",{
+        email ,
+       },{
+      headers: {
+        "Content-Type": "application/json" 
+      }
+    });
+       return response.data
+     }
 
-  const forgotPass = async (email,pno,new_pass,conf_new_pass) => {
+  const forgotPass = async (email,otp,new_pass,conf_new_pass) => {
     
     const response =   await axios.post("https://village-banking-app.onrender.com/api/profile/login/forgot-password/", {
         email : email,
-        phonenumber : pno,
+        otp : otp,
         new_password : new_pass,
         confirm_new_password : conf_new_pass,
       })
     return response.data
   }
-
+  
   const changePass =async (old_pass,new_pass,conf_new_pass) => {
      const response = await axios.patch("https://village-banking-app.onrender.com/api/profile/change-password/", {
       old_password : old_pass,
@@ -67,7 +77,7 @@ const signup =async (fname,lname,age,email,pno,password,confPassword,profileType
   }
 
   return (
-    <AuthContext.Provider value={{authToken,signup,login,forgotPass,changePass}}>
+    <AuthContext.Provider value={{authToken,signup,login,forgotPass,changePass,sendOtp}}>
        {children}
     </AuthContext.Provider>
   )
