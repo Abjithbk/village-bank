@@ -16,6 +16,7 @@ const UserDashboard = () => {
   const [receiverAccountNumber, setReceiverAccountNumber] = useState('');
   const [description, setDescription] = useState('');
   const [selectDetails,setSelectDetails] = useState('')
+  const [tranMessage,setTranMessage] = useState('')
   const [error,setError] = useState('')
   const [userProfile,setUserProfile] = useState(null)
   const navigate = useNavigate();
@@ -81,6 +82,8 @@ const UserDashboard = () => {
       setType('deposit');
       setReceiverAccountNumber('');
       setDescription('');
+      setTranMessage("Your Transaction Successfully Completed.");
+
     }
     catch(error) {
    
@@ -89,18 +92,6 @@ const UserDashboard = () => {
     }
   }  
     const handleTransactionClick =async (txn) => {
-      // const [senderResponse,receiverResponse] = await Promise.all([
-      //    axios.get(`https://village-banking-app.onrender.com/api/profile/${txn.sender}/`, {
-      //     headers : {
-      //       Authorization : `Bearer ${authToken?.access}`,
-      //     }
-      //    }),
-      //    axios.get(`https://village-banking-app.onrender.com/api/profile/${txn.receiver}/`, {
-      //     headers : {
-      //       Authorization : `Bearer ${authToken?.access}`,
-      //     }
-      //    })
-      // ])
       const requests = [];
 
       if(txn.sender) {
@@ -125,8 +116,8 @@ const UserDashboard = () => {
       const [senderResponse,receiverResponse] = await Promise.all(requests)
       setSelectDetails({
         ...txn,
-        senderDetails : senderResponse.data,
-        receiverDetails : receiverResponse.data,
+        senderDetails : senderResponse?.data,
+        receiverDetails : receiverResponse?.data,
       })
 
     }
@@ -348,6 +339,7 @@ const UserDashboard = () => {
             activeSection === "perform" && (
               <form onSubmit={handleTransaction} className="bg-blue-50 border border-blue-200 p-4 rounded-md max-w-xl mb-6">
               <h3 className="text-lg font-bold mb-4">Perform Transaction</h3>
+              {tranMessage && <p className='text-green-500'>{tranMessage}</p> }
               {error && <p className='text-red-600'>{error}</p> }
               <div className="flex flex-col gap-4">
                 <select value={type} onChange={(e) =>{
@@ -369,7 +361,7 @@ const UserDashboard = () => {
                 }
                 <textarea value={description} onChange={(e) => {
                   setDescription(e.target.value)
-                }} placeholder="Description (optional)" className="p-2 border rounded-md"></textarea>
+                }} placeholder="Description " required className="p-2 border rounded-md"></textarea>
                 <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                   Submit
                 </button>
@@ -391,7 +383,7 @@ const UserDashboard = () => {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             
               <img
-                src={userProfile.profile_pic}
+                src={userProfile.profile_pic.url}
                 alt="Profile"
                 className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
               />
@@ -426,7 +418,11 @@ const UserDashboard = () => {
                   <div className="md:col-span-2">
                     <p className="text-gray-600 text-sm">Created At</p>
                     <p className="text-lg font-medium">
-                      {userProfile.account?.created_at}
+                      {new Date(userProfile.account?.created_at).toLocaleDateString('en-IN', {
+                        day : 'numeric',
+                        month : 'short',
+                        year : 'numeric'
+                      })}
                     </p>
                   </div>
                 </div>
