@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
+import { useLocation } from 'react-router-dom';
 import {
   Chart as ChartJS,
   LineElement,
@@ -13,7 +14,10 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
 
 const AdminDashboard = () => {
   const [openMenu, setOpenMenu] = useState(false);
+   const [showNotification,setShowNotification] = useState(false)
+    const [notificationMessage,setNotificationMessage] = useState('')
   const navigate =  useNavigate()
+  const location = useLocation()
   const chartData = {
     labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     datasets: [
@@ -26,6 +30,16 @@ const AdminDashboard = () => {
       },
     ],
   };
+  useEffect(()=> {
+      if(location.state?.message) {
+       setNotificationMessage(location.state.message)
+       setShowNotification(true);
+
+       setTimeout(() => {
+         setShowNotification(false)
+       }, 5000);
+      }
+  },[location.state])
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
@@ -82,7 +96,11 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Chart Section */}
+       {showNotification && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-md z-50">
+          {notificationMessage}
+        </div>
+      )}
         <div className="bg-gray-100 p-4 rounded-md mb-6">
           <Line data={chartData} />
         </div>

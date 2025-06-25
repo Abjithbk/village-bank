@@ -10,7 +10,6 @@ const LoginPage = () => {
   const { login } = useAuth()
      const handleLogin =async (e) => {
          e.preventDefault();
-
          try {
           const response = await login(email,password)
           console.log(response);
@@ -18,13 +17,15 @@ const LoginPage = () => {
           const decoded = jwtDecode(response.access);
           console.log(decoded);
           const role = decoded.profile_type
+          const successState = { state: { message: "✅ Logged in successfully" } };
           
           if(role === "admin") {
-            navigate("/AdminDashboard")
+            navigate("/AdminDashboard",successState)
           }
           if(role === "user") {
-            navigate("/UserDashboard")
+            navigate("/UserDashboard",successState)
           }
+          
           
          }
          catch(error) {
@@ -111,6 +112,7 @@ const LoginPage = () => {
             </span>
           </p>
         </div>
+        
       </div>
   )
 }

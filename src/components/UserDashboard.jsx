@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 import {
   Chart as ChartJS,
   LineElement,
@@ -29,8 +30,11 @@ const UserDashboard = () => {
   const [selectDetails,setSelectDetails] = useState('')
   const [tranMessage,setTranMessage] = useState('')
   const [error,setError] = useState('')
+  const [showNotification,setShowNotification] = useState(false)
+  const [notificationMessage,setNotificationMessage] = useState('')
   const [userProfile,setUserProfile] = useState(null)
   const navigate = useNavigate();
+  const location = useLocation();
   const { authToken } = useAuth()
 
   useEffect(()=> {
@@ -71,8 +75,18 @@ const UserDashboard = () => {
       console.log(error);
      }
      }
+
+      if(location.state?.message) {
+       setNotificationMessage(location.state.message)
+       setShowNotification(true);
+
+       setTimeout(() => {
+         setShowNotification(false)
+       }, 5000);
+      }
+
      accountDetailsAndProfile();
-  },[authToken])
+  },[authToken,location.state])
 
                     const chartData = {
                 labels: transactions.map(txn =>
@@ -225,7 +239,7 @@ const UserDashboard = () => {
         )}
       </aside>
 
-      {/* Main Content */}
+ 
       <main className="flex-1 p-4 md:p-6 bg-white">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <h2 className="text-2xl md:text-3xl font-semibold capitalize">{activeSection}</h2>
@@ -234,7 +248,11 @@ const UserDashboard = () => {
           </button>
         </div>
 
-     
+     {showNotification && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-md z-50">
+          {notificationMessage}
+        </div>
+      )}
         {activeSection === "dashboard" && (
           <div className="bg-gray-100 p-4 rounded-md">
             <Line data={chartData} options={chartOptions} />
@@ -244,16 +262,15 @@ const UserDashboard = () => {
       
         {activeSection === "transactions" && (
   <>
-   
     <div className="overflow-x-auto mb-6">
       <table className="min-w-full text-sm border rounded">
         <thead className="bg-gray-200">
           <tr>
-            <th className="p-2">Type</th>
-            <th className="p-2">Amount</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Date</th>
-            <th className="p-2">Details</th>
+            <th className="p-2 text-left">Type</th>
+            <th className="p-2 text-left">Amount</th>
+            <th className="p-2 text-left">Status</th>
+            <th className="p-2 text-left">Date</th>
+            <th className="p-2 text-left">Details</th>
           </tr>
         </thead>
         <tbody>
@@ -263,9 +280,9 @@ const UserDashboard = () => {
             }} key={index} className="border-t">
               <td className="p-2">{txn.transaction_type}</td>
               <td className="p-2">₹ {txn.amount}</td>
-              <td className="p-2">{txn.status}</td>
+              <td className={`p-2 font-semibold ${txn.status === "success" ? 'text-green-700': 'text-red-600'}`}>{txn.status}</td>
               <td className="p-2">{txn.timestamp}</td>
-              <td className="p-2">View</td>
+              <td className="p-2 cursor-pointer">View</td>
             </tr>
           ))}
         </tbody>
