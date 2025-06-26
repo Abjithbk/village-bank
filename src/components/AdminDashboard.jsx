@@ -9,15 +9,24 @@ import {
   PointElement,
 } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
 
 const AdminDashboard = () => {
   const [openMenu, setOpenMenu] = useState(false);
    const [showNotification,setShowNotification] = useState(false)
+   const [activeSection,setActiveSection] = useState("dashboard");
+   const [users,setUsers] = useState([])
+   const [totalUsers,setTotalUsers] = useState(0)
+   const [page,setPage] = useState(1);
+   const [loading,setLoading] = useState(false)
     const [notificationMessage,setNotificationMessage] = useState('')
   const navigate =  useNavigate()
   const location = useLocation()
+  const { authToken } = useAuth()
   const chartData = {
     labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     datasets: [
@@ -39,7 +48,29 @@ const AdminDashboard = () => {
          setShowNotification(false)
        }, 5000);
       }
-  },[location.state])
+       
+       const usersDetails = async () => {
+        setLoading(true)
+        try {
+          const response = await axios.get("https://village-banking-app.onrender.com/api/admin/dashboard/profile/", {
+          headers : {
+            Authorization : `Bearer ${authToken?.access}`
+          }
+        });
+        console.log(response.data);
+        setUsers(response.data.results);
+        setTotalUsers(response.data.count);
+        }
+        catch(error) {
+          console.log(error);
+        }
+        finally {
+          setLoading(false)
+        }
+        
+       }
+       usersDetails()
+  },[location.state,authToken])
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
@@ -47,9 +78,25 @@ const AdminDashboard = () => {
       <aside className="w-full md:w-64 bg-green-100 p-5 md:min-h-screen">
         <h1 className="text-2xl font-bold mb-6">Admin Panel</h1>
         <ul className="space-y-3">
-          <li className="hover:bg-green-200 p-2 rounded-md">Dashboard</li>
-          <li className="hover:bg-green-200 p-2 rounded-md">Users</li>
-          <li className="hover:bg-green-200 p-2 rounded-md">Transactions</li>
+         {
+          [
+            {key : "dashboard", label : "Dashboard" },
+            {key : "users",label : "Users"},
+            {key : "transactions",label : "Transactions"}
+          ].map((item) => (
+            <li
+            key={item.key}
+            onClick={()=> {
+              setActiveSection(item.key);
+            }}
+            className={`p-2 rounded-md cursor-pointer ${
+              activeSection === item.key ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-200"
+            }`}
+            >
+             {item.label}
+            </li>
+          ))
+         }
           <li
             className="hover:bg-green-200 p-2 rounded-md cursor-pointer"
             onClick={() => setOpenMenu(!openMenu)}
@@ -81,6 +128,9 @@ const AdminDashboard = () => {
         </div>
 
         {/* Summary Cards */}
+       {
+        activeSection === "dashboard" && (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-green-50 p-4 rounded shadow">
             <p className="text-gray-600">Total Users</p>
@@ -95,29 +145,49 @@ const AdminDashboard = () => {
             <p className="text-2xl font-bold">12</p>
           </div>
         </div>
+        <div className="bg-gray-100 p-4 rounded-md mb-6">
+          <Line data={chartData} />
+        </div>
+        </>
+        )
+       }
 
        {showNotification && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-md z-50">
           {notificationMessage}
         </div>
       )}
-        <div className="bg-gray-100 p-4 rounded-md mb-6">
-          <Line data={chartData} />
-        </div>
+        
 
         {/* Users Table */}
-        <div className="overflow-x-auto">
+        {
+          activeSection === "users" && (
+            <div className="overflow-x-auto">
           <table className="min-w-full border text-sm">
             <thead className="bg-green-200 text-left">
               <tr>
-                <th className="p-3">ID</th>
                 <th className="p-3">Name</th>
                 <th className="p-3">Email</th>
-                <th className="p-3">Role</th>
+                <th className="p-3">Phone Number</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t">
+              {
+                loading ? (
+                  <tr><td className='p-3 col-span-4'>Loading...</td></tr>
+                ) : users.length ? (
+                  users.map((user) => (
+                    <tr className='border-t'>
+                      <td className='p-3'>{user.first_name} {user.last_name} </td>
+                      <td className='p-3'>{user.email}</td>
+                      <td className='p-3'>{user.phonenumber} </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td className='p-3'>No users found</td></tr>
+                )
+              }
+              {/* <tr className="border-t">
                 <td className="p-3">1</td>
                 <td className="p-3">Alice</td>
                 <td className="p-3">alice@example.com</td>
@@ -134,10 +204,41 @@ const AdminDashboard = () => {
                 <td className="p-3">Charlie</td>
                 <td className="p-3">charlie@example.com</td>
                 <td className="p-3">Admin</td>
-              </tr>
+              </tr> */}
+           
+
             </tbody>
           </table>
+             <div className="flex justify-between items-center mt-4">
+  <button
+    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+    disabled={page === 1}
+    className={`px-4 py-2 rounded ${
+      page === 1 ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+    }`}
+  >
+    Previous
+  </button>
+
+  <span className="text-sm text-gray-700">
+    Page {page} of {Math.ceil(totalUsers/5)} ({totalUsers} users)
+  </span>
+
+  <button
+    onClick={() => setPage((prev) => prev + 1)}
+    disabled={page >= Math.ceil(totalUsers/5)}
+    className={`px-4 py-2 rounded ${
+      page >= Math.ceil(totalUsers/5 )
+        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+        : 'bg-green-600 text-white hover:bg-green-700'
+    }`}
+  >
+    Next
+  </button>
+</div>
         </div>
+          )
+        }
       </main>
     </div>
   );
