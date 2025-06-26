@@ -22,6 +22,7 @@ const AdminDashboard = () => {
    const [users,setUsers] = useState([])
    const [totalUsers,setTotalUsers] = useState(0)
    const [page,setPage] = useState(1);
+   const [pagination,setPagination] = useState('')
    const [loading,setLoading] = useState(false)
     const [notificationMessage,setNotificationMessage] = useState('')
   const navigate =  useNavigate()
@@ -39,25 +40,19 @@ const AdminDashboard = () => {
       },
     ],
   };
-  useEffect(()=> {
-      if(location.state?.message) {
-       setNotificationMessage(location.state.message)
-       setShowNotification(true);
-
-       setTimeout(() => {
-         setShowNotification(false)
-       }, 5000);
-      }
-       
-       const usersDetails = async () => {
+   const usersDetails = async (url) => {
         setLoading(true)
         try {
-          const response = await axios.get("https://village-banking-app.onrender.com/api/admin/dashboard/profile/", {
+          const response = await axios.get(url, {
           headers : {
             Authorization : `Bearer ${authToken?.access}`
           }
         });
         console.log(response.data);
+        setPagination({
+          next : response.data.next,
+          previous : response.data.previous
+        });
         setUsers(response.data.results);
         setTotalUsers(response.data.count);
         }
@@ -69,8 +64,21 @@ const AdminDashboard = () => {
         }
         
        }
-       usersDetails()
-  },[location.state,authToken])
+  useEffect(()=> {
+      if(location.state?.message) {
+       setNotificationMessage(location.state.message)
+       setShowNotification(true);
+
+       setTimeout(() => {
+         setShowNotification(false)
+       }, 5000);
+      }
+       
+      
+       usersDetails("https://village-banking-app.onrender.com/api/admin/dashboard/profile/?page=1")
+  },[location.state])
+
+  
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
@@ -187,55 +195,45 @@ const AdminDashboard = () => {
                   <tr><td className='p-3'>No users found</td></tr>
                 )
               }
-              {/* <tr className="border-t">
-                <td className="p-3">1</td>
-                <td className="p-3">Alice</td>
-                <td className="p-3">alice@example.com</td>
-                <td className="p-3">User</td>
-              </tr>
-              <tr className="border-t">
-                <td className="p-3">2</td>
-                <td className="p-3">Bob</td>
-                <td className="p-3">bob@example.com</td>
-                <td className="p-3">Moderator</td>
-              </tr>
-              <tr className="border-t">
-                <td className="p-3">3</td>
-                <td className="p-3">Charlie</td>
-                <td className="p-3">charlie@example.com</td>
-                <td className="p-3">Admin</td>
-              </tr> */}
-           
-
             </tbody>
           </table>
              <div className="flex justify-between items-center mt-4">
-  <button
-    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-    disabled={page === 1}
-    className={`px-4 py-2 rounded ${
-      page === 1 ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
-    }`}
-  >
-    Previous
-  </button>
+                <button
+                  onClick={() => {
+                    if(pagination.previous) {
+                      setPage((prev) => prev-1);
+                      usersDetails(pagination.previous)
+                    }
+                  }}
+                  disabled={!pagination.previous}
+                  className={`px-4 py-2 rounded ${
+                   !pagination.previous ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  Previous
+                </button>
 
-  <span className="text-sm text-gray-700">
-    Page {page} of {Math.ceil(totalUsers/5)} ({totalUsers} users)
-  </span>
+                <span className="text-sm text-gray-700">
+                  Page {page} of {Math.ceil(totalUsers/5)} ({totalUsers} users)
+                </span>
 
-  <button
-    onClick={() => setPage((prev) => prev + 1)}
-    disabled={page >= Math.ceil(totalUsers/5)}
-    className={`px-4 py-2 rounded ${
-      page >= Math.ceil(totalUsers/5 )
-        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-        : 'bg-green-600 text-white hover:bg-green-700'
-    }`}
-  >
-    Next
-  </button>
-</div>
+                <button
+                  onClick={() => {
+                    if(pagination.next) {
+                      setPage((prev) => prev+1);
+                      usersDetails(pagination.next);
+                    }
+                  }}
+                  disabled={!pagination.next}
+                  className={`px-4 py-2 rounded ${
+                   !pagination.next
+                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  Next
+                </button>
+                  </div>
         </div>
           )
         }
