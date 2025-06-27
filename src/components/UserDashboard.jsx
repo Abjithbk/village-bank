@@ -35,10 +35,14 @@ const UserDashboard = () => {
   const [userProfile,setUserProfile] = useState(null)
   const navigate = useNavigate();
   const location = useLocation();
-  const { authToken } = useAuth()
+  const { authToken,logout } = useAuth()
 
   useEffect(()=> {
+
      const accountDetailsAndProfile =async ()=> {
+      if(!authToken || !authToken.access) {
+        return;
+      }
       try {
        const response = await axios.get("https://village-banking-app.onrender.com/api/profile/",{
          headers : {
@@ -46,8 +50,7 @@ const UserDashboard = () => {
          }
        })
        setAccountNumber(response.data.account.account_number)
-       console.log(response.data.account.account_number);
-       
+       console.log(response.data);
       }
       catch(error) {
        console.error(error);
@@ -234,6 +237,10 @@ const UserDashboard = () => {
                 setActiveSection("profile");
                 setOpenMenu(false);
               }} className="hover:bg-gray-100 p-2 rounded">Profile</li>
+              <li onClick={() => {
+                logout();
+                navigate("/LoginPage");
+              }} className='hover:bg-gray-100 p-2 rounded'>Logout</li>
             </ul>
           </div>
         )}
@@ -243,9 +250,25 @@ const UserDashboard = () => {
       <main className="flex-1 p-4 md:p-6 bg-white">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <h2 className="text-2xl md:text-3xl font-semibold capitalize">{activeSection}</h2>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 w-full md:w-auto">
-            Logout
-          </button>
+          {
+            userProfile ? (
+           
+            <span className="text-gray-800 font-semibold bg-green-100 px-3 py-1 rounded-full shadow-sm">
+                 👋 Welcome, {userProfile?.first_name}
+                     </span>
+
+            ) : (
+          <button
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
+              onClick={() => {
+                logout();
+                navigate("/LoginPage", { replace: true });
+              }}
+            >
+              Logout
+            </button>
+            )
+          }
         </div>
 
      {showNotification && (

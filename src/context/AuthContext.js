@@ -40,7 +40,11 @@ const signup =async (fname,lname,age,email,pno,password,confPassword,profileType
     
       }
       return response.data
-  }  
+  }
+     const logout = () => {
+         setAuthToken(null)
+         localStorage.removeItem('authToken');
+     }  
      const sendOtp =async (email) => {
        const response = await axios.post("https://village-banking-app.onrender.com/api/profile/login/sentotp/",{
         email ,
@@ -77,7 +81,7 @@ const signup =async (fname,lname,age,email,pno,password,confPassword,profileType
   }
 
   return (
-    <AuthContext.Provider value={{authToken,signup,login,forgotPass,changePass,sendOtp}}>
+    <AuthContext.Provider value={{authToken,signup,login,forgotPass,changePass,sendOtp,logout}}>
        {children}
     </AuthContext.Provider>
   )
