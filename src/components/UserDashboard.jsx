@@ -53,9 +53,6 @@ const UserDashboard = () => {
          }
        })
        setAccountNumber(response.data.account.account_number)
-       console.log(response.data);
-      
-       
       }
       catch(error) {
        console.error(error);
@@ -205,7 +202,7 @@ const UserDashboard = () => {
     <div className="flex flex-col md:flex-row min-h-screen">
   
       <aside className="w-full md:w-64 bg-gray-100 p-4 md:p-6">
-        <h1 className="text-xl md:text-2xl font-bold mb-6">Village Banking System</h1>
+        <h1 className="text-xl md:text-2xl font-bold mb-6">User Panel</h1>
         <ul className="space-y-3">
           {
             [
@@ -300,19 +297,17 @@ const UserDashboard = () => {
             <th className="p-2 text-left">Amount</th>
             <th className="p-2 text-left">Status</th>
             <th className="p-2 text-left">Date</th>
-            <th className="p-2 text-left">Details</th>
           </tr>
         </thead>
         <tbody>
           {transactions.map((txn, index) => (
             <tr onClick={()=> {
               handleTransactionClick(txn);
-            }} key={index} className="border-t">
+            }} key={index} className="border-t cursor-pointer">
               <td className="p-2">{txn.transaction_type}</td>
               <td className="p-2">₹ {txn.amount}</td>
               <td className={`p-2 font-semibold ${txn.status === "success" ? 'text-green-700': 'text-red-600'}`}>{txn.status}</td>
               <td className="p-2">{txn.timestamp}</td>
-              <td className="p-2 cursor-pointer">View</td>
             </tr>
           ))}
         </tbody>

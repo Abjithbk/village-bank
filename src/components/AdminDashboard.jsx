@@ -34,12 +34,24 @@ const AdminDashboard = () => {
    const [selectedTxnId,setSelectedTxnId] = useState('')
    const [userTransaction,setUserTransaction] = useState([])
    const [loading,setLoading] = useState(false)
-    const [notificationMessage,setNotificationMessage] = useState('')
+   const [notificationMessage,setNotificationMessage] = useState('')
+   const [statusFilter,setStatusFilter] = useState('');
+   const [typeFilter,setTypeFilter] = useState('')
+   const [filters,setFilters] = useState({
+              selectedField : "name",
+              searchValue : '',
+   })
+   const [error,setError] = useState('')
   const navigate =  useNavigate()
   const location = useLocation()
   const { authToken,logout } = useAuth()
    const chartData = {
-                  labels: transaction.map((_, index) => `Txn ${index + 1}`),
+                labels: transaction.map(txn =>
+                      new Date(txn.timestamp).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short'
+                      })
+                    ),
                 datasets: [
                   {
                     label: 'Transaction Amount (₹)',
@@ -79,6 +91,14 @@ const AdminDashboard = () => {
                   }
                 }
               };
+            const buildSingleUserFilterUrl = () => {
+          const baseUrl = new URL("https://village-banking-app.onrender.com/api/admin/dashboard/profile/");
+          if (filters.searchValue.trim() && filters.selectedField) {
+            baseUrl.searchParams.append(filters.selectedField, filters.searchValue.trim());
+          }
+          baseUrl.searchParams.set("page", 1);
+          return baseUrl.toString();
+        };
 
    const usersDetails = async (url) => {
         setLoading(true)
@@ -105,6 +125,12 @@ const AdminDashboard = () => {
         }
         
        }
+       const buildTransactionUrl = (baseUrl) => {
+        const url = new URL(baseUrl);
+        if (statusFilter) url.searchParams.set('status', statusFilter);
+        if (typeFilter) url.searchParams.set('transaction_type', typeFilter);
+        return url.toString();
+      };
          const getTransactionDetails =async (url) => {
     try {
         const res = await axios.get(url, {
@@ -132,13 +158,18 @@ const AdminDashboard = () => {
             Authorization : `Bearer ${authToken?.access}`
           }
         })
-            console.log(response.data);
             setSenderRes(response.data.sender)
             setReceiverRes(response.data.receiver)
             
        }
        catch(error) {
-        console.log(error);
+     if(error.response?.status === 429) {
+      setError("Too many requests. Please try again after a minute.")
+     }
+     else {
+      console.log(error);
+      
+     }
         
        }
    }
@@ -192,8 +223,10 @@ const AdminDashboard = () => {
       }
        usersDetails("https://village-banking-app.onrender.com/api/admin/dashboard/profile/?page=1");
        getAdminProfile()
-       getTransactionDetails("https://village-banking-app.onrender.com/api/admin/dashboard/transaction/?page=1");
-  },[location.state,authToken])
+       setTransPage(1)
+       const url = buildTransactionUrl("https://village-banking-app.onrender.com/api/admin/dashboard/transaction/?page=1")
+       getTransactionDetails(url);
+  },[location.state,authToken,statusFilter,typeFilter])
 
   
 
@@ -314,10 +347,44 @@ const AdminDashboard = () => {
       )}
         
 
-        {/* Users Table */}
         {
           activeSection === "users" && (
             <div className="overflow-x-auto">
+                     <div className="flex flex-wrap items-center gap-4 mb-4">
+                      <select
+                        value={filters.selectedField}
+                        onChange={(e) =>
+                          setFilters((prev) => ({ ...prev, selectedField: e.target.value }))
+                        }
+                        className="border px-3 py-2 rounded"
+                      >
+                        <option value="name">Name</option>
+                        <option value="email">Email</option>
+                        <option value="phonenumber">Phone Number</option>
+                        <option value="account_number">Account Number</option>
+                      </select>
+
+                      <input
+                        type="text"
+                        placeholder={`Search by ${filters.selectedField || 'field'}`}
+                        value={filters.searchValue}
+                        onChange={(e) =>
+                          setFilters((prev) => ({ ...prev, searchValue: e.target.value }))
+                        }
+                        className="px-3 py-2 border rounded"
+                      />
+
+                      <button
+                        onClick={() => {
+                          const url = buildSingleUserFilterUrl();
+                          usersDetails(url);
+                          setPage(1);
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                      >
+                        Search
+                      </button>
+                    </div>
           <table className="min-w-full border text-sm">
             <thead className="bg-green-200 text-left">
               <tr>
@@ -351,13 +418,16 @@ const AdminDashboard = () => {
           </table>
              <div className="flex justify-between items-center mt-4">
                 <button
-                  onClick={() => {
-                    const totalPage = Math.ceil(totalUsers/5)
-                    if(pagination.previous && page < totalPage) {
-                      setPage((prev) => prev-1);
-                      usersDetails(pagination.previous)
-                    }
-                  }}
+                    onClick={() => {
+                      if (pagination.previous) {
+                        setPage((prev) => prev - 1);
+                        const prevUrl = new URL(pagination.previous);
+                        Object.entries(filters).forEach(([key, value]) => {
+                          if (value.trim()) prevUrl.searchParams.set(key, value.trim());
+                        });
+                        usersDetails(prevUrl.toString());
+                      }
+                    }}
                   disabled={!pagination.previous}
                   className={`px-4 py-2 rounded ${
                    !pagination.previous ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
@@ -372,11 +442,15 @@ const AdminDashboard = () => {
 
                 <button
                   onClick={() => {
-                    if(pagination.next && page >1) {
-                      setPage((prev) => prev+1);
-                      usersDetails(pagination.next);
-                    }
-                  }}
+                  if (pagination.next) {
+                    setPage((prev) => prev + 1);
+                    const nextUrl = new URL(pagination.next);
+                    Object.entries(filters).forEach(([key, value]) => {
+                      if (value.trim()) nextUrl.searchParams.set(key, value.trim());
+                    });
+                    usersDetails(nextUrl.toString());
+                  }
+                }}
                   disabled={!pagination.next}
                   className={`px-4 py-2 rounded ${
                    !pagination.next
@@ -493,6 +567,34 @@ const AdminDashboard = () => {
         {
           activeSection === "transactions" && (
             <div className="overflow-x-auto mb-6">
+                     <div className="flex flex-wrap gap-4 mb-4">
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+          }}
+          className="border px-3 py-2 rounded"
+        >
+          <option value="">All Status</option>
+          <option value="success">Success</option>
+          <option value="failed">Failed</option>
+          <option value="pending">Pending</option>
+        </select>
+
+        <select
+          value={typeFilter}
+          onChange={(e) => {
+            setTypeFilter(e.target.value);
+          }}
+          className="border px-3 py-2 rounded"
+        >
+          <option value="">All Types</option>
+          <option value="deposit">Deposit</option>
+          <option value="withdraw">Withdrawal</option>
+          <option value="transfer">Transfer</option>
+        </select>
+      </div>
+              {error && <p className='text-red-600 font-semibold'>{error}</p> }
       <table className="min-w-full text-sm border rounded">
         <thead className="bg-gray-200">
           <tr>
@@ -524,9 +626,9 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => {
                    
-                    if(transPagination.previous && transPage > 1) {
+                    if(transPagination.previous) {
                       setTransPage((prev) => prev-1);
-                      getTransactionDetails(transPagination.previous)
+                      getTransactionDetails(buildTransactionUrl(transPagination.previous))
                     }
                   }}
                   disabled={!transPagination.previous}
@@ -543,10 +645,10 @@ const AdminDashboard = () => {
 
                 <button
                   onClick={() => {
-                     const totalPage = Math.ceil(totalTrans/5)
-                    if(transPagination.next  && transPage < totalPage) {
+                    //  const totalPage = Math.ceil(totalTrans/5)
+                    if(transPagination.next) {
                       setTransPage((prev) => prev+1);
-                      getTransactionDetails(transPagination.next);
+                      getTransactionDetails(buildTransactionUrl(transPagination.next));
                     }
                   }}
                   disabled={!transPagination.next}
@@ -676,7 +778,7 @@ const AdminDashboard = () => {
 
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
         <img
-          src={adminProfile.current_user.profile_pic}
+          src={adminProfile.current_user.image_url}
           alt="Profile"
           className="w-40 h-40 rounded-full object-cover border-4 border-green-200 shadow"
         />
