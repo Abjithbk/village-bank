@@ -25,23 +25,61 @@ const AdminDashboard = () => {
    const [pagination,setPagination] = useState('')
    const [adminProfile,setAdminProfile] = useState('');
    const [selectedUser,setSelectedUser] = useState(null)
+   const [transaction,setTransaction] = useState([])
+   const [transPagination,setTransPagination] = useState('')
+   const [transPage,setTransPage] = useState(1);
+   const [totalTrans,setTotalTrans] = useState(0)
+   const [senderRes,setSenderRes] = useState('');
+   const [receiverRes,setReceiverRes] = useState('');
+   const [selectedTxnId,setSelectedTxnId] = useState('')
+   const [userTransaction,setUserTransaction] = useState([])
    const [loading,setLoading] = useState(false)
     const [notificationMessage,setNotificationMessage] = useState('')
   const navigate =  useNavigate()
   const location = useLocation()
   const { authToken,logout } = useAuth()
-  const chartData = {
-    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    datasets: [
-      {
-        label: 'Total Transactions',
-        data: [12000, 19000, 17000, 22000, 21000, 23000, 20000],
-        fill: false,
-        borderColor: '#10B981',
-        tension: 0.4,
-      },
-    ],
-  };
+   const chartData = {
+                  labels: transaction.map((_, index) => `Txn ${index + 1}`),
+                datasets: [
+                  {
+                    label: 'Transaction Amount (₹)',
+                    data: transaction.map(txn => parseFloat(txn.amount)),
+                    fill: false,
+                    borderColor: '#3b82f6',
+                    tension: 0.3,
+                  }
+                ]
+              };
+
+              const chartOptions = {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'top' },
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return `₹ ${context.raw}`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: 'Amount (₹)',
+                    }
+                  },
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Date',
+                    }
+                  }
+                }
+              };
+
    const usersDetails = async (url) => {
         setLoading(true)
         if(!authToken || !authToken.access) return
@@ -51,7 +89,6 @@ const AdminDashboard = () => {
             Authorization : `Bearer ${authToken?.access}`
           }
         });
-        console.log(response.data);
         setPagination({
           next : response.data.next,
           previous : response.data.previous,
@@ -68,18 +105,58 @@ const AdminDashboard = () => {
         }
         
        }
-
-       const getUserDetails =async () => {
+         const getTransactionDetails =async (url) => {
+    try {
+        const res = await axios.get(url, {
+          headers : {
+            Authorization : `Bearer ${authToken?.access}`
+          }
+         })
+         setTransaction(res.data.results);
+         setTransPagination({
+          next : res.data.next,
+          previous : res.data.previous
+         })
+         setTotalTrans(res.data.count)
+    }
+    catch(error) {
+      console.log(error);
+      
+    }    
+   }
+     
+   const handleTransactionClick =async (id) => { 
+       try {
+        const response = await axios.get(`https://village-banking-app.onrender.com/api/admin/dashboard/transaction/${id}/`,{
+          headers :{
+            Authorization : `Bearer ${authToken?.access}`
+          }
+        })
+            console.log(response.data);
+            setSenderRes(response.data.sender)
+            setReceiverRes(response.data.receiver)
+            
+       }
+       catch(error) {
+        console.log(error);
+        
+       }
+   }
+       const getUserDetails =async (id) => {
+    
+        
           try {
-           const response = await axios.get("https://village-banking-app.onrender.com/api/admin/dashboard/profile/", {
+           const response = await axios.get(`https://village-banking-app.onrender.com/api/admin/dashboard/profile/${id}`, {
             headers : {
               Authorization : `Bearer ${authToken?.access}`
             }
            })
            setSelectedUser(response.data);
-           setActiveSection("userdetails")
-           console.log(response.data);
-           
+           setUserTransaction({
+            sender : response.data.account?.sender,
+            receiver : response.data.account?.receiver
+           })
+           setActiveSection("userdetails")         
           }
           catch(error) {
            console.log(error);
@@ -98,35 +175,30 @@ const AdminDashboard = () => {
         Authorization : `Bearer ${authToken?.access}`
       }
     })
-    console.log(response.data);
     setAdminProfile(response.data);
     }
     catch(error) {
-      console.log(error);
-      
+      console.log(error); 
     }
-    
    }
-
       if(location.state?.message) {
-       setNotificationMessage(location.state.message)
+       setNotificationMessage(location.state.message);
+       navigate(location.pathname, { replace: true });
        setShowNotification(true);
 
        setTimeout(() => {
          setShowNotification(false)
-       }, 5000);
+       }, 2000);
       }
-       
-      
        usersDetails("https://village-banking-app.onrender.com/api/admin/dashboard/profile/?page=1");
        getAdminProfile()
+       getTransactionDetails("https://village-banking-app.onrender.com/api/admin/dashboard/transaction/?page=1");
   },[location.state,authToken])
 
   
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
-      {/* Sidebar */}
       <aside className="w-full md:w-64 bg-green-100 p-5 md:min-h-screen">
         <h1 className="text-2xl font-bold mb-6">Admin Panel</h1>
         <ul className="space-y-3">
@@ -177,7 +249,6 @@ const AdminDashboard = () => {
         )}
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-4 bg-white">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold capitalize">{activeSection}</h2>
@@ -190,12 +261,17 @@ const AdminDashboard = () => {
 
             ) : (
               <div className='space-x-2'>
-                <button
+                <button onClick={() => {
+                  navigate("/SignUpPage")
+                }}
               className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
              SignUp
             </button>
           <button
+          onClick={() => {
+                  navigate("/LoginPage")
+                }}
               className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
              Login
@@ -206,9 +282,9 @@ const AdminDashboard = () => {
           }
         </div>
 
-        {/* Summary Cards */}
+     
        {
-        activeSection === "dashboard" && (
+        activeSection === "dashboard" &&  (
         <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-green-50 p-4 rounded shadow">
@@ -220,12 +296,12 @@ const AdminDashboard = () => {
             <p className="text-2xl font-bold">{adminProfile.bank_balance}</p>
           </div>
           <div className="bg-green-50 p-4 rounded shadow">
-            <p className="text-gray-600">New Signups</p>
-            <p className="text-2xl font-bold">12</p>
+            <p className="text-gray-600">Total Transactions</p>
+            <p className="text-2xl font-bold">{totalTrans}</p>
           </div>
         </div>
         <div className="bg-gray-100 p-4 rounded-md mb-6">
-          <Line data={chartData} />
+          <Line data={chartData} options={chartOptions} />
         </div>
         </>
         )
@@ -255,12 +331,12 @@ const AdminDashboard = () => {
                 loading ? (
                   <tr><td className='p-3 col-span-4'>Loading...</td></tr>
                 ) : users.length ? (
-                  users.map((user) => (
+                  users.map((user,index) => (
                     <tr 
-                    onClick={() => {
-                      getUserDetails()
-                    }}
-                    // key={user.user_id}
+                     onClick={() => {
+                      getUserDetails(user.id)
+                     }}
+                    key={index}
                     className='border-t'>
                       <td className='p-3'>{user.first_name} {user.last_name} </td>
                       <td className='p-3'>{user.email}</td>
@@ -276,7 +352,8 @@ const AdminDashboard = () => {
              <div className="flex justify-between items-center mt-4">
                 <button
                   onClick={() => {
-                    if(pagination.previous) {
+                    const totalPage = Math.ceil(totalUsers/5)
+                    if(pagination.previous && page < totalPage) {
                       setPage((prev) => prev-1);
                       usersDetails(pagination.previous)
                     }
@@ -295,7 +372,7 @@ const AdminDashboard = () => {
 
                 <button
                   onClick={() => {
-                    if(pagination.next) {
+                    if(pagination.next && page >1) {
                       setPage((prev) => prev+1);
                       usersDetails(pagination.next);
                     }
@@ -311,6 +388,285 @@ const AdminDashboard = () => {
                 </button>
                   </div>
         </div>
+          )
+        }
+           {
+            activeSection === "userdetails" && selectedUser && (
+              <div className="bg-white shadow p-6 rounded-lg max-w-3xl mx-auto w-full">
+             <h2 className="text-2xl font-bold mb-6 text-center">User Profile</h2>
+
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            
+              <img
+                src={selectedUser.image_url}
+                alt="Profile"
+                className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
+              />
+
+              
+              <div className="flex-1 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-gray-600 text-sm">First Name</p>
+                    <p className="text-lg font-medium">{selectedUser.first_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Last Name</p>
+                    <p className="text-lg font-medium">{selectedUser.last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Age</p>
+                    <p className="text-lg font-medium">{selectedUser.age}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Phone Number</p>
+                    <p className="text-lg font-medium">{selectedUser.phonenumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Account Number</p>
+                    <p className="text-lg font-medium">{selectedUser.account?.account_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-sm">Account Balance</p>
+                    <p className="text-lg font-medium">₹ {selectedUser.account?.balance} </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-gray-600 text-sm">Created At</p>
+                    <p className="text-lg font-medium">
+                      {new Date(selectedUser.account?.created_at).toLocaleDateString('en-IN', {
+                        day : 'numeric',
+                        month : 'short',
+                        year : 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+               <div className="mt-10">
+      <h3 className="text-xl font-semibold mb-4">Transaction History</h3>
+      
+      {userTransaction.sender?.length || userTransaction.receiver?.length ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-auto border border-gray-200">
+            <thead>
+              <tr className="bg-gray-100 text-gray-700 text-left">
+                <th className="p-3 border">Type</th>
+                <th className="p-3 border">Amount</th>
+                <th className="p-3 border">Status</th>
+                <th className="p-3 border">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...userTransaction.sender,...userTransaction.receiver].map((txn, idx) => (
+                <tr key={idx} className="border-t hover:bg-gray-50">
+                  <td className="p-3 capitalize">{txn.transaction_type}</td>
+                  <td className="p-3">₹ {txn.amount}</td>
+                  <td className={`p-3 font-semibold ${txn.status === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                    {txn.status}
+                  </td>
+                  <td className="p-3">
+                    {new Date(txn.timestamp).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric', hour :'numeric',minute : 'numeric',second : 'numeric',hour12 : true
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-gray-600">No transactions found for this user.</p>
+      )}
+    </div>
+          </div>
+         
+            )
+           }
+           
+
+        
+        {
+          activeSection === "transactions" && (
+            <div className="overflow-x-auto mb-6">
+      <table className="min-w-full text-sm border rounded">
+        <thead className="bg-gray-200">
+          <tr>
+            <th className="p-2 text-left">Type</th>
+            <th className="p-2 text-left">Amount</th>
+            <th className="p-2 text-left">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+           {
+            transaction.length ? (
+              transaction.map((txn,index) => (
+                <tr onClick={() => {
+                  handleTransactionClick(txn.id)
+                  setSelectedTxnId(txn.id)
+                }} key={index} className={`border-t cursor-pointer ${selectedTxnId === txn.id ? 'bg-blue-100 text-blue-700' : ''}`}>
+              <td className="p-2 capitalize">{txn.transaction_type}</td>
+              <td className="p-2">₹ {txn.amount}</td>
+              <td className={`p-2 font-semibold ${txn.status === "success" ? 'text-green-700': 'text-red-600'}`}>{txn.status}</td>
+            </tr>
+              )) 
+            ) : (
+              <tr><td className='p-3'>No Transaction found</td></tr> 
+            )
+           }
+        </tbody>
+      </table>
+       <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={() => {
+                   
+                    if(transPagination.previous && transPage > 1) {
+                      setTransPage((prev) => prev-1);
+                      getTransactionDetails(transPagination.previous)
+                    }
+                  }}
+                  disabled={!transPagination.previous}
+                  className={`px-4 py-2 rounded ${
+                   !transPagination.previous ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  Previous
+                </button>
+
+                <span className="text-sm text-gray-700">
+                  Page {transPage} of {Math.ceil(totalTrans/5)} ({totalTrans} Transactions)
+                </span>
+
+                <button
+                  onClick={() => {
+                     const totalPage = Math.ceil(totalTrans/5)
+                    if(transPagination.next  && transPage < totalPage) {
+                      setTransPage((prev) => prev+1);
+                      getTransactionDetails(transPagination.next);
+                    }
+                  }}
+                  disabled={!transPagination.next}
+                  className={`px-4 py-2 rounded ${
+                   !transPagination.next
+                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  Next
+                </button>
+                  </div>
+                  {
+                    senderRes && (
+                      <div className="bg-white shadow p-6 rounded-lg max-w-3xl mx-auto w-full">
+                  <h2 className="text-2xl font-bold mb-6 text-center">Sender</h2>
+
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                  
+                    <img
+                      src={senderRes.user.image_url}
+                      alt="Profile"
+                      className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
+                    />
+
+                    
+                    <div className="flex-1 w-full">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-gray-600 text-sm">First Name</p>
+                          <p className="text-lg font-medium">{senderRes.user.first_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Last Name</p>
+                          <p className="text-lg font-medium">{senderRes.user.last_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Age</p>
+                          <p className="text-lg font-medium">{senderRes.user.age}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Phone Number</p>
+                          <p className="text-lg font-medium">{senderRes.user.phonenumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Account Number</p>
+                          <p className="text-lg font-medium">{senderRes.account_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Account Balance</p>
+                          <p className="text-lg font-medium">₹ {senderRes.balance} </p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-gray-600 text-sm">Created At</p>
+                          <p className="text-lg font-medium">
+                            {senderRes.created_at}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                    )
+                  }
+
+                  {
+                    receiverRes && (
+                      <div className="bg-white shadow p-6 rounded-lg max-w-3xl mx-auto w-full">
+                  <h2 className="text-2xl font-bold mb-6 text-center">Receiver</h2>
+
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                  
+                    <img
+                      src={receiverRes.user.image_url}
+                      alt="Profile"
+                      className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
+                    />
+
+                    
+                    <div className="flex-1 w-full">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-gray-600 text-sm">First Name</p>
+                          <p className="text-lg font-medium">{receiverRes.user.first_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Last Name</p>
+                          <p className="text-lg font-medium">{receiverRes.user.last_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Age</p>
+                          <p className="text-lg font-medium">{receiverRes.user.age}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Phone Number</p>
+                          <p className="text-lg font-medium">{receiverRes.user.phonenumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Account Number</p>
+                          <p className="text-lg font-medium">{receiverRes.account_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Account Balance</p>
+                          <p className="text-lg font-medium">₹ {receiverRes.balance} </p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-gray-600 text-sm">Created At</p>
+                          <p className="text-lg font-medium">
+                            {receiverRes.created_at}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                    )
+                  }
+                </div>
+            
+                
           )
         }
         {

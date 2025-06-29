@@ -6,6 +6,7 @@ import { jwtDecode } from 'jwt-decode'
 const LoginPage = () => {
   const [email,setEmail] = useState('')
   const [password,setPassword] = useState('')
+  const [error,setError] = useState('')
   const navigate = useNavigate()
   const { login } = useAuth()
      const handleLogin =async (e) => {
@@ -29,8 +30,7 @@ const LoginPage = () => {
           
          }
          catch(error) {
-          console.log(error);
-          
+           setError(error.response.data.message)
          }
      }
   return (
@@ -47,6 +47,7 @@ const LoginPage = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          {error && <p className='text-red-600'>{error}</p> }
           <form onSubmit={handleLogin}  className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900">

@@ -10,6 +10,7 @@ const ForgotPassword = () => {
     const [passError,setPassError] = useState('');
     const [otpError,setOtpError] = useState('')
     const [otpMessage,setOtpMessage] = useState('')
+    const [rateLimitError,setRateLimitError] = useState('')
     const [step,setStep] = useState('requestOtp')
     const {forgotPass,sendOtp} = useAuth()
     const navigate = useNavigate()
@@ -25,8 +26,12 @@ const ForgotPassword = () => {
       setStep('verifyOtp')
       }
       catch(error) {
-        setOtpError("otp do not send.Try again")
-        
+        if(error.response?.status === 429) {
+          setRateLimitError("Too many OTP requests. Please try again after a minute.")
+        }
+        else {
+           setOtpError("otp do not send.Try again")
+        }
       }
     } 
 
@@ -59,6 +64,9 @@ const ForgotPassword = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm"> 
+          {otpMessage && <p className='text-green-400'>{otpMessage}</p> }
+          {otpError && <p className='text-red-600'>{otpError}</p> }
+          {rateLimitError && <p className='text-red-500 font-semibold'>{rateLimitError}</p> }
           {
             step === 'requestOtp' && (
 

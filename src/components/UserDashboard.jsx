@@ -33,9 +33,12 @@ const UserDashboard = () => {
   const [showNotification,setShowNotification] = useState(false)
   const [notificationMessage,setNotificationMessage] = useState('')
   const [userProfile,setUserProfile] = useState(null)
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { authToken,logout } = useAuth()
+
+  
 
   useEffect(()=> {
 
@@ -51,11 +54,14 @@ const UserDashboard = () => {
        })
        setAccountNumber(response.data.account.account_number)
        console.log(response.data);
+      
+       
       }
       catch(error) {
        console.error(error);
       }
      try {
+      
         const profileDetails = await axios.get("https://village-banking-app.onrender.com/api/profile/", {
         headers : {
           Authorization : `Bearer ${authToken?.access}`
@@ -82,7 +88,7 @@ const UserDashboard = () => {
       if(location.state?.message) {
        setNotificationMessage(location.state.message)
        setShowNotification(true);
-
+      navigate(location.pathname, { replace: true });
        setTimeout(() => {
          setShowNotification(false)
        }, 5000);
@@ -186,6 +192,7 @@ const UserDashboard = () => {
         )
       }
       const [senderResponse,receiverResponse] = await Promise.all(requests)
+      
       setSelectDetails({
         ...txn,
         senderDetails : senderResponse?.data,
@@ -324,7 +331,7 @@ const UserDashboard = () => {
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                   
                     <img
-                      src={selectDetails.senderDetails.user.profile_pic}
+                      src={userProfile.image_url}
                       alt="Profile"
                       className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
                     />
@@ -378,7 +385,7 @@ const UserDashboard = () => {
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                   
                     <img
-                      src={selectDetails.receiverDetails.user.profile_pic}
+                      src={userProfile.image_url}
                       alt="Profile"
                       className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
                     />
@@ -478,7 +485,7 @@ const UserDashboard = () => {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             
               <img
-                src={userProfile.profile_pic.url}
+                src={userProfile.image_url}
                 alt="Profile"
                 className="w-40 h-40 rounded-full object-cover border-4 border-blue-200 shadow-md"
               />
