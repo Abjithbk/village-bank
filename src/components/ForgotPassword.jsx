@@ -57,18 +57,12 @@ const ForgotPassword = () => {
     await forgotPass(email, otp, new_pass, conf_new_pass)
       navigate('/LoginPage')
     } catch (error) {
-      console.log(error)
-      console.log(error.res);
-      
+  
       if(error.response?.data?.otp) {
-        console.log(error.response.data.otp);
         setOtpError(error.response.data.otp)
-        
       }
       else if(error.response?.data?.detail) {
-           console.log(error.response?.data?.detail);
-           setPassError(error.response?.data?.detail)
-           
+           setPassError(error.response?.data?.detail) 
       }
       else {
          setPassError('Failed to reset password. Try again.')

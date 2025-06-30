@@ -33,7 +33,8 @@ const UserDashboard = () => {
   const [showNotification,setShowNotification] = useState(false)
   const [notificationMessage,setNotificationMessage] = useState('')
   const [userProfile,setUserProfile] = useState(null)
-  
+  const [loading,setLoading] = useState(false)
+  const [selectTxnId,setSelectTxnId] = useState(null)
   const navigate = useNavigate();
   const location = useLocation();
   const { authToken,logout } = useAuth()
@@ -88,11 +89,20 @@ const UserDashboard = () => {
       navigate(location.pathname, { replace: true });
        setTimeout(() => {
          setShowNotification(false)
-       }, 5000);
+       }, 2000);
       }
 
+       if (tranMessage || error) {
+    const timer = setTimeout(() => {
+      setTranMessage('');
+      setError('');
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }
+
      accountDetailsAndProfile();
-  },[authToken,location.state])
+  },[authToken,location.state,tranMessage,error])
 
                     const chartData = {
                 labels: transactions.map(txn =>
@@ -140,6 +150,7 @@ const UserDashboard = () => {
   
   const handleTransaction =async (e) => {
    e.preventDefault();
+   setLoading(true)
     try {
        await axios.post("https://village-banking-app.onrender.com/api/profile/transaction/", 
        { account_number : accountNumber,
@@ -162,8 +173,11 @@ const UserDashboard = () => {
     }
     catch(error) {
    
-    setError(error.response.data.error)
+    setError(error.response?.data?.error || "Transaction Failed.Try Again..")
     
+    }
+    finally {
+      setLoading(false)
     }
   }  
     const handleTransactionClick =async (txn) => {
@@ -304,7 +318,8 @@ const UserDashboard = () => {
           {transactions.map((txn, index) => (
             <tr onClick={()=> {
               handleTransactionClick(txn);
-            }} key={index} className="border-t cursor-pointer">
+              setSelectTxnId(txn.id)
+            }} key={index} className={`border-t cursor-pointer ${selectTxnId === txn.id ? 'bg-blue-100' : ''}`}>
               <td className="p-2">{txn.transaction_type}</td>
               <td className="p-2">₹ {txn.amount}</td>
               <td className={`p-2 font-semibold ${txn.status === "success" ? 'text-green-700': 'text-red-600'}`}>{txn.status}</td>
@@ -432,7 +447,6 @@ const UserDashboard = () => {
        }
   </>
 )}
-
           {
             activeSection === "perform" && (
               <form onSubmit={handleTransaction} className="bg-blue-50 border border-blue-200 p-4 rounded-md max-w-xl mb-6">
@@ -460,8 +474,12 @@ const UserDashboard = () => {
                 <textarea value={description} onChange={(e) => {
                   setDescription(e.target.value)
                 }} placeholder="Description " required className="p-2 border rounded-md"></textarea>
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                  Submit
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`bg-blue-600 text-white px-4 py-2 rounded ${loading ? 'opacity-60 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+                >
+                  {loading ? 'Processing...' : 'Submit'}
                 </button>
               </div>
             </form>
