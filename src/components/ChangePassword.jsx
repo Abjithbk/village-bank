@@ -8,13 +8,17 @@ const ChangePassword = () => {
     const [conf_new_pass,setConf_New_Pass]= useState("")
     const [message,setMessage] = useState("")
     const [error,setError] = useState("")
+    const [loading,setLoading] = useState(false);
     const {changePass} = useAuth()
     const navigate = useNavigate()
 
     const handleChangePass =async (e) => {
         e.preventDefault();
+        setLoading(true)
       if(new_pass !== conf_new_pass) {
          setMessage("password do not match")
+         setLoading(false);
+         return;
       }
         try {
             await changePass(old_pass,new_pass,conf_new_pass);
@@ -23,16 +27,16 @@ const ChangePassword = () => {
         }
         catch(error) {
              setError("Password doesn't Changed.Try again")
+             console.log(error);
+             
+        }
+        finally {
+          setLoading(false)
         }
     }
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <img
-            alt="Your Company"
-            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-            className="mx-auto h-10 w-auto"
-          />
           <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
             Change Password
           </h2>
@@ -40,6 +44,12 @@ const ChangePassword = () => {
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form onSubmit={handleChangePass} className="space-y-6">
+            {loading && (
+            <div className="flex items-center justify-center gap-2 text-indigo-600 font-medium">
+              <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              <span>Changing Password..</span>
+            </div>
+          )}
             <div>
               <label className="block text-sm/6 font-medium text-gray-900">
                 Old Password
@@ -101,9 +111,11 @@ const ChangePassword = () => {
                 {error && <p className='text-red-500'>{error}</p> }
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled = {loading}
+                 className={`flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold text-white shadow-sm 
+                ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500"}`}
               >
-                Change Password
+                {loading ? "Please Wait.." : "Change Password"}
               </button>
             </div>
           </form>

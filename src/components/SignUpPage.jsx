@@ -12,14 +12,16 @@ const SignUpPage = () => {
   const [profileType,setProfileType] = useState('');
   const [empId,setEmpId] = useState('');
   const [profilePic,setProfilePic] = useState('');
+  const [loading,setLoading] = useState(false)
 
   const navigate = useNavigate()
   const {signup} = useAuth()
      const handleSubmit =async (e) => {
         e.preventDefault();
-
+        setLoading(true)
         if(password !== confPassword) {
           alert("Password do not match")
+          setLoading(false)
           return;
         }
         try {
@@ -30,7 +32,9 @@ const SignUpPage = () => {
         }
         catch(error) {
        console.log(error);
-       
+        }
+        finally {
+          setLoading(false)
         }
      }
   return (
@@ -43,6 +47,12 @@ const SignUpPage = () => {
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {loading && (
+            <div className="flex items-center justify-center gap-2 text-indigo-600 font-medium">
+              <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              <span>Creating account...</span>
+            </div>
+          )}
             <div>
               <label htmlFor="fname" className="block text-sm/6 font-medium text-gray-900">
                 First Name
@@ -263,9 +273,12 @@ const SignUpPage = () => {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled = {loading}
+                 className={`flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold text-white shadow-sm 
+                ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500"}`}
+            
               >
-                Sign Up
+               {loading ? "Please wait..." : "Sign Up"}
               </button>
             </div>
           </form>
