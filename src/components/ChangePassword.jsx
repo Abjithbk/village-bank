@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React,{useEffect, useState} from 'react'
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,24 +16,31 @@ const ChangePassword = () => {
         e.preventDefault();
         setLoading(true)
       if(new_pass !== conf_new_pass) {
-         setMessage("password do not match")
+         alert("password do not match.Try again..")
          setLoading(false);
          return;
       }
         try {
-            await changePass(old_pass,new_pass,conf_new_pass);
-           setMessage("Password Changed successfully");
+          const res =   await changePass(old_pass,new_pass,conf_new_pass);
+           setMessage(res.message);
            navigate("/LoginPage")
         }
         catch(error) {
-             setError("Password doesn't Changed.Try again")
-             console.log(error);
+             setError(error.res?.message)
+             console.log(error.res?.message);
              
         }
         finally {
           setLoading(false)
         }
     }
+    useEffect(() => {
+      const timer = setTimeout(() => {
+         setMessage('');
+         setError('')
+      }, 2000);
+      return () => clearTimeout(timer)
+    })
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">

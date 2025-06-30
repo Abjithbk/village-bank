@@ -236,15 +236,15 @@ const UserDashboard = () => {
             <ul className="space-y-2 text-sm">
               <li onClick={() => {
                 navigate("/ChangePassword")
-              }} className="hover:bg-gray-100 p-2 rounded">Change Password</li>
+              }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Change Password</li>
               <li onClick={() => {
                 setActiveSection("profile");
                 setOpenMenu(false);
-              }} className="hover:bg-gray-100 p-2 rounded">Profile</li>
+              }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Profile</li>
               <li onClick={() => {
                 logout();
                 navigate("/LoginPage");
-              }} className='hover:bg-gray-100 p-2 rounded'>Logout</li>
+              }} className='hover:bg-gray-100 p-2 rounded cursor-pointer'>Logout</li>
             </ul>
           </div>
         )}
@@ -257,7 +257,7 @@ const UserDashboard = () => {
           {
             userProfile ? (
            
-            <span className="text-gray-800 font-semibold bg-green-100 px-3 py-1 rounded-full shadow-sm">
+            <span className="text-gray-800 font-semibold bg-green-100 px-3 py-1 rounded-full shadow-sm cursor-pointer">
                  👋 Welcome, {userProfile?.first_name}
                      </span>
 

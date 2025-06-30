@@ -43,6 +43,10 @@ const ForgotPassword = () => {
   if (otpMessage) {
     const timer = setTimeout(() => {
       setOtpMessage('')
+      setRateLimitError('');
+      setOtpError('')
+      setPassError('')
+      
     }, 2000)
 
     return () => clearTimeout(timer)
@@ -54,7 +58,7 @@ const ForgotPassword = () => {
     setPassError('')
 
     if (new_pass !== conf_new_pass) {
-      setPassError('Passwords do not match')
+      alert('Passwords do not match');
       setLoading(false)
       return
     }
