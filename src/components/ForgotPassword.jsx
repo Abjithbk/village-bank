@@ -34,24 +34,14 @@ const ForgotPassword = () => {
         setRateLimitError('Too many OTP requests. Please try again after a minute.')
       } else {
         setOtpError('Failed to send OTP. Please try again.')
+        console.log(error);
+        
       }
     } finally {
       setLoading(false)
     }
   }
-   useEffect(() => {
-  if (otpMessage) {
-    const timer = setTimeout(() => {
-      setOtpMessage('')
-      setRateLimitError('');
-      setOtpError('')
-      setPassError('')
-      
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }
-}, [otpMessage])
+   
   const handleForgot = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -64,16 +54,42 @@ const ForgotPassword = () => {
     }
 
     try {
-      await forgotPass(email, otp, new_pass, conf_new_pass)
+    await forgotPass(email, otp, new_pass, conf_new_pass)
       navigate('/LoginPage')
     } catch (error) {
       console.log(error)
-      setPassError('Failed to reset password. Try again.')
+      console.log(error.res);
+      
+      if(error.response?.data?.otp) {
+        console.log(error.response.data.otp);
+        setOtpError(error.response.data.otp)
+        
+      }
+      else if(error.response?.data?.detail) {
+           console.log(error.response?.data?.detail);
+           setPassError(error.response?.data?.detail)
+           
+      }
+      else {
+         setPassError('Failed to reset password. Try again.')
+      }
     } finally {
       setLoading(false)
     }
   }
+useEffect(() => {
+  if (otpMessage || otpError || rateLimitError || passError) {
+    const timer = setTimeout(() => {
+      setOtpMessage('')
+      setRateLimitError('');
+      setOtpError('')
+      setPassError('')
+      
+    }, 2000)
 
+    return () => clearTimeout(timer)
+  }
+}, [otpMessage,otpError,rateLimitError,passError])
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
