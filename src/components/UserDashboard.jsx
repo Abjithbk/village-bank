@@ -209,7 +209,8 @@ const UserDashboard = () => {
               {key : "dashboard",label : "Dashboard"},
               {key : "transactions",label : "Transactions"},
               {key : "perform",label : "Perform Transaction"},
-              {key : "reports",label : "Reports"}
+              {key : "reports",label : "Reports"},
+              {key : "profile",label : "Profile"}
             ].map((item) => (
               <li
                key={item.key}
@@ -237,10 +238,10 @@ const UserDashboard = () => {
               <li onClick={() => {
                 navigate("/ChangePassword")
               }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Change Password</li>
-              <li onClick={() => {
+              {/* <li onClick={() => {
                 setActiveSection("profile");
                 setOpenMenu(false);
-              }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Profile</li>
+              }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Profile</li> */}
               <li onClick={() => {
                 logout();
                 navigate("/LoginPage");

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { jwtDecode } from 'jwt-decode'
@@ -33,6 +33,14 @@ const LoginPage = () => {
       setLoading(false)
     }
   }
+  useEffect(() => {
+    if(error) {
+      const timer = setTimeout(() => {
+        setError('')
+      }, 2000);
+      return () => clearTimeout(timer)
+    }
+  })
 
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">

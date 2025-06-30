@@ -240,6 +240,7 @@ const AdminDashboard = () => {
             {key : "dashboard", label : "Dashboard" },
             {key : "users",label : "Users"},
             {key : "transactions",label : "Transactions"},
+            {key : "profile",label : "Profile"},
            
           ].map((item) => (
             <li
@@ -266,17 +267,17 @@ const AdminDashboard = () => {
         {openMenu && (
           <div className="mt-4 bg-white shadow p-3 rounded">
             <ul className="space-y-2 text-sm">
-              <li onClick={() => {
+              {/* <li onClick={() => {
                 setActiveSection("profile");
                 setOpenMenu(false)
-              }} className="hover:bg-gray-100 p-2 rounded">Profile</li>
+              }} className="hover:bg-gray-100 p-2 rounded">Profile</li> */}
               <li  onClick={()=> {
                 navigate("/ChangePassword")
-              }} className="hover:bg-gray-100 p-2 rounded">Change Password</li>
+              }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Change Password</li>
               <li onClick={()=> {
                 logout();
                 navigate("/LoginPage")
-              }} className="hover:bg-gray-100 p-2 rounded">Log Out</li>
+              }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Log Out</li>
             </ul>
           </div>
         )}
