@@ -276,7 +276,7 @@ const AdminDashboard = () => {
               }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Change Password</li>
               <li onClick={()=> {
                 logout();
-                navigate("/LoginPage")
+                navigate("/LoginPage",{replace : true})
               }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Log Out</li>
             </ul>
           </div>
@@ -296,7 +296,7 @@ const AdminDashboard = () => {
             ) : (
               <div className='space-x-2'>
                 <button onClick={() => {
-                  navigate("/SignUpPage")
+                  navigate("/SignUpPage",{replace : true})
                 }}
               className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
@@ -304,7 +304,7 @@ const AdminDashboard = () => {
             </button>
           <button
           onClick={() => {
-                  navigate("/LoginPage")
+                  navigate("/LoginPage",{replace : true})
                 }}
               className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
             >

@@ -258,7 +258,7 @@ const UserDashboard = () => {
               }} className="hover:bg-gray-100 p-2 rounded cursor-pointer">Profile</li> */}
               <li onClick={() => {
                 logout();
-                navigate("/LoginPage");
+                navigate("/LoginPage",{replace : true});
               }} className='hover:bg-gray-100 p-2 rounded cursor-pointer'>Logout</li>
             </ul>
           </div>

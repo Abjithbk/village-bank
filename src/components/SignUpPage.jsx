@@ -27,7 +27,7 @@ const SignUpPage = () => {
         try {
      await signup(fname,lname,age,email,pno,password,confPassword,profileType,empId,profilePic)
         //  console.log(response);
-         navigate("/LoginPage")
+         navigate("/LoginPage",{replace:true})
          
         }
         catch(error) {

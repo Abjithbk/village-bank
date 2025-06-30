@@ -22,10 +22,10 @@ const LoginPage = () => {
       const successState = { state: { message: "✅ Logged in successfully" } }
 
       if (role === "admin") {
-        navigate("/AdminDashboard", successState)
+        navigate("/AdminDashboard",{replace : true}, successState)
       }
       if (role === "user") {
-        navigate("/UserDashboard", successState)
+        navigate("/UserDashboard",{replace : true}, successState)
       }
     } catch (error) {
       setError(error.response?.data?.message || "Login failed")
