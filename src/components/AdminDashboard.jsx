@@ -194,6 +194,11 @@ const AdminDashboard = () => {
            
           }
        }
+       useEffect(() => {
+      setSelectedTxnId(null);
+      setSenderRes('');
+      setReceiverRes('');
+    }, [statusFilter, typeFilter]);
   useEffect(()=> {
 
    const getAdminProfile =async () => {
