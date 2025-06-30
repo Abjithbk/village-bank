@@ -201,6 +201,7 @@ const SignUpPage = () => {
                   checked = {profileType === "user"}
                   onChange={(e) => {
                     setProfileType(e.target.value)
+                    if(e.target.value === "user") setEmpId("")
                   }}
                 
                 /> User
@@ -235,7 +236,9 @@ const SignUpPage = () => {
                 
            
             </div>
-            <div>
+            {
+              (profileType === "staff" || profileType === "admin") && (
+                <div>
               <label className="block text-sm/6 font-medium text-gray-900">
                Employee id
               </label>
@@ -248,12 +251,14 @@ const SignUpPage = () => {
                   onChange={(e)=> {
                     setEmpId(e.target.value)
                   }}
-                  required
+              
                 
                   className=" border block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
               </div>
             </div>
+              )
+            }
             <div>
               <label className="block text-sm/6 font-medium text-gray-900">
                Profile Pic
